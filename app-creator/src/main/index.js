@@ -52,6 +52,7 @@ class AppCreator {
       minHeight: 650,
       title: 'Universal Electron Wrapper Creator',
       icon: path.join(__dirname, '../../build/icon.png'),
+      autoHideMenuBar: true,
       webPreferences: {
         preload: path.join(__dirname, '../preload/index.js'),
         contextIsolation: true,
@@ -61,6 +62,9 @@ class AppCreator {
       show: false,
       backgroundColor: '#1a1a2e'
     });
+
+    // Hide menu bar completely
+    this.mainWindow.setMenuBarVisibility(false);
 
     // Load the renderer
     this.mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));

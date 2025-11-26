@@ -367,13 +367,21 @@ class BuildOrchestrator extends EventEmitter {
   }
 
   /**
-   * Finalize build output - copy installer to Downloads folder
+   * Finalize build output - copy installer to app-builds folder
    */
   async finalizeOutput() {
     const distPath = path.join(this.workspacePath, 'dist');
-    const downloadsPath = app.getPath('downloads');
+    
+    // Save to app-creator/app-builds/{appName}/ folder
+    const appBuildsPath = path.join(app.getAppPath(), 'app-builds');
+    const safeName = this.config.safeName || this.templateManager.generateSafeName(this.config.appName);
+    const appOutputPath = path.join(appBuildsPath, safeName);
+    
+    // Ensure the app-builds folder exists
+    await fs.ensureDir(appOutputPath);
     
     this.installerFiles = [];
+    this.appOutputPath = appOutputPath;
     
     if (await fs.pathExists(distPath)) {
       const files = await fs.readdir(distPath);
@@ -386,19 +394,19 @@ class BuildOrchestrator extends EventEmitter {
         const ext = path.extname(file).toLowerCase();
         if (installerExtensions.includes(ext)) {
           const sourcePath = path.join(distPath, file);
-          const destPath = path.join(downloadsPath, file);
+          const destPath = path.join(appOutputPath, file);
           
           try {
-            // Copy to Downloads folder
+            // Copy to app-builds folder
             await fs.copy(sourcePath, destPath, { overwrite: true });
             this.installerFiles.push({
               name: file,
               path: destPath,
               size: (await fs.stat(destPath)).size
             });
-            this.log(`✓ Copied to Downloads: ${file}`);
+            this.log(`✓ Saved: ${file}`);
           } catch (error) {
-            this.log(`Warning: Could not copy ${file} to Downloads: ${error.message}`);
+            this.log(`Warning: Could not copy ${file}: ${error.message}`);
           }
         }
       }
@@ -406,7 +414,7 @@ class BuildOrchestrator extends EventEmitter {
       if (this.installerFiles.length === 0) {
         this.log('Warning: No installer files found in build output');
       } else {
-        this.log(`${this.installerFiles.length} installer(s) copied to Downloads folder`);
+        this.log(`${this.installerFiles.length} installer(s) saved to: ${appOutputPath}`);
       }
     } else {
       this.log('Warning: dist folder not found');
@@ -423,10 +431,10 @@ class BuildOrchestrator extends EventEmitter {
 
   /**
    * Get output path
-   * @returns {string} Output path
+   * @returns {string} Output path (app-builds folder)
    */
   getOutputPath() {
-    return path.join(this.workspacePath, 'dist');
+    return this.appOutputPath || path.join(this.workspacePath, 'dist');
   }
 
   /**
