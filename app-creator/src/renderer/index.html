@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data: blob:;">
+  <title>Universal Electron Wrapper Creator</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Title Bar -->
+    <div class="title-bar">
+      <div class="title-bar-drag">
+        <span class="title-bar-text">🚀 Universal Electron Wrapper Creator</span>
+      </div>
+      <div class="title-bar-controls">
+        <button class="title-btn" onclick="window.electronAPI.minimize()">─</button>
+        <button class="title-btn" onclick="window.electronAPI.maximize()">□</button>
+        <button class="title-btn close" onclick="window.electronAPI.close()">✕</button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Sidebar Steps -->
+      <div class="sidebar">
+        <div class="step active" data-step="1">
+          <div class="step-number">1</div>
+          <div class="step-label">Basic Info</div>
+        </div>
+        <div class="step" data-step="2">
+          <div class="step-number">2</div>
+          <div class="step-label">Window Settings</div>
+        </div>
+        <div class="step" data-step="3">
+          <div class="step-number">3</div>
+          <div class="step-label">Platform</div>
+        </div>
+        <div class="step" data-step="4">
+          <div class="step-number">4</div>
+          <div class="step-label">Build</div>
+        </div>
+      </div>
+
+      <!-- Content Area -->
+      <div class="content-area">
+        <!-- Step 1: Basic Info -->
+        <div class="step-content active" id="step-1">
+          <h2>📝 Basic Configuration</h2>
+          <p class="step-description">Enter the URL of your web application and choose a name for your desktop app.</p>
+          
+          <div class="form-group">
+            <label for="url">Application URL *</label>
+            <input type="url" id="url" placeholder="https://www.example.com" required>
+            <span class="validation-message" id="url-validation"></span>
+            <p class="hint">The URL that will load when your app starts</p>
+          </div>
+
+          <div class="form-group">
+            <label for="appName">Application Name *</label>
+            <input type="text" id="appName" placeholder="My Awesome App" required>
+            <span class="validation-message" id="name-validation"></span>
+            <p class="hint">This will be the name shown in the taskbar and installer</p>
+          </div>
+
+          <div class="form-group">
+            <label>Application Icon</label>
+            <div class="icon-upload-area" id="iconUploadArea">
+              <div class="icon-preview" id="iconPreview">
+                <span class="icon-placeholder">📁</span>
+                <p>Click to select icon</p>
+                <p class="hint">PNG, JPG, or ICO (512x512 minimum)</p>
+              </div>
+            </div>
+            <button class="btn btn-secondary" id="clearIconBtn" style="display: none;">Clear Icon</button>
+            <span class="validation-message" id="icon-validation"></span>
+          </div>
+        </div>
+
+        <!-- Step 2: Window Settings -->
+        <div class="step-content" id="step-2">
+          <h2>🖥️ Window Configuration</h2>
+          <p class="step-description">Configure how your application window will appear.</p>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="windowWidth">Width (px)</label>
+              <input type="number" id="windowWidth" value="1200" min="400" max="4000">
+            </div>
+            <div class="form-group">
+              <label for="windowHeight">Height (px)</label>
+              <input type="number" id="windowHeight" value="800" min="300" max="4000">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="minWidth">Min Width (px)</label>
+              <input type="number" id="minWidth" value="800" min="200" max="4000">
+            </div>
+            <div class="form-group">
+              <label for="minHeight">Min Height (px)</label>
+              <input type="number" id="minHeight" value="600" min="150" max="4000">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="resizable" checked>
+              <span>Allow window resizing</span>
+            </label>
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="frame" checked>
+              <span>Show window frame (title bar)</span>
+            </label>
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="alwaysOnTop">
+              <span>Always on top</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Step 3: Platform Selection -->
+        <div class="step-content" id="step-3">
+          <h2>💻 Platform Selection</h2>
+          <p class="step-description">Choose which platforms to build for.</p>
+
+          <div class="platform-cards">
+            <div class="platform-card selected" data-platform="windows">
+              <div class="platform-icon">🪟</div>
+              <div class="platform-name">Windows</div>
+              <div class="platform-desc">NSIS Installer</div>
+              <div class="platform-check">✓</div>
+            </div>
+
+            <div class="platform-card" data-platform="macos">
+              <div class="platform-icon">🍎</div>
+              <div class="platform-name">macOS</div>
+              <div class="platform-desc">DMG Package</div>
+              <div class="platform-check">✓</div>
+            </div>
+
+            <div class="platform-card" data-platform="linux">
+              <div class="platform-icon">🐧</div>
+              <div class="platform-name">Linux</div>
+              <div class="platform-desc">AppImage, DEB</div>
+              <div class="platform-check">✓</div>
+            </div>
+          </div>
+
+          <h3>Advanced Options</h3>
+          
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="devTools">
+              <span>Enable Developer Tools</span>
+            </label>
+            <p class="hint">Allow users to open DevTools (for debugging)</p>
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="autoUpdate">
+              <span>Enable Auto-Update</span>
+            </label>
+            <p class="hint">Allow the app to update automatically (requires server setup)</p>
+          </div>
+        </div>
+
+        <!-- Step 4: Build -->
+        <div class="step-content" id="step-4">
+          <h2>🔨 Build Application</h2>
+          
+          <!-- Pre-build summary -->
+          <div id="buildSummary" class="build-summary">
+            <h3>Build Configuration</h3>
+            <div class="summary-grid">
+              <div class="summary-item">
+                <span class="summary-label">App Name:</span>
+                <span class="summary-value" id="summaryName">-</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">URL:</span>
+                <span class="summary-value" id="summaryUrl">-</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Window Size:</span>
+                <span class="summary-value" id="summarySize">-</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Platform:</span>
+                <span class="summary-value" id="summaryPlatform">-</span>
+              </div>
+            </div>
+            <button class="btn btn-primary btn-large" id="startBuildBtn">
+              🚀 Start Build
+            </button>
+          </div>
+
+          <!-- Build Progress -->
+          <div id="buildProgress" class="build-progress" style="display: none;">
+            <div class="progress-header">
+              <h3 id="buildStatus">Building...</h3>
+              <span id="buildPercentage">0%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-step" id="currentStep">Preparing...</div>
+            
+            <div class="console-output" id="consoleOutput">
+              <div class="console-header">Console Output</div>
+              <div class="console-content" id="consoleContent"></div>
+            </div>
+
+            <button class="btn btn-danger" id="cancelBuildBtn">Cancel Build</button>
+          </div>
+
+          <!-- Build Result -->
+          <div id="buildResult" class="build-result" style="display: none;">
+            <div class="result-icon success" id="resultIcon">✓</div>
+            <h3 id="resultTitle">Build Complete!</h3>
+            <p id="resultMessage">Your application has been created successfully.</p>
+            
+            <div class="result-details">
+              <div class="result-item">
+                <span class="result-label">Output Location:</span>
+                <span class="result-value" id="outputPath">-</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">Build Time:</span>
+                <span class="result-value" id="buildTime">-</span>
+              </div>
+            </div>
+
+            <div class="result-actions">
+              <button class="btn btn-primary" id="openOutputBtn">📁 Open Output Folder</button>
+              <button class="btn btn-secondary" id="createAnotherBtn">➕ Create Another App</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Buttons -->
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" id="prevBtn" disabled>← Back</button>
+      <button class="btn btn-primary" id="nextBtn">Next →</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

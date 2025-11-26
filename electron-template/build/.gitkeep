@@ -1,0 +1,7 @@
+# This file is a placeholder for the build directory
+# Place your application icons here:
+# - icon.png (1024x1024 for general use)
+# - icon.ico (Windows)
+# - icon.icns (macOS)
+#
+# Icons will be used by electron-builder during the packaging process.

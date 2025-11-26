@@ -1,0 +1,77 @@
+{
+  "app": {
+    "name": "My Application",
+    "version": "1.0.0",
+    "description": "My web application wrapper",
+    "author": "Your Name",
+    "homepage": "https://www.example.com"
+  },
+  "target": {
+    "url": "https://www.example.com",
+    "userAgent": null
+  },
+  "window": {
+    "width": 1200,
+    "height": 800,
+    "minWidth": 800,
+    "minHeight": 600,
+    "maxWidth": null,
+    "maxHeight": null,
+    "resizable": true,
+    "movable": true,
+    "minimizable": true,
+    "maximizable": true,
+    "closable": true,
+    "focusable": true,
+    "alwaysOnTop": false,
+    "fullscreen": false,
+    "kiosk": false,
+    "frame": true,
+    "show": true,
+    "center": true,
+    "title": "My Application",
+    "backgroundColor": "#ffffff",
+    "transparent": false,
+    "hasShadow": true,
+    "opacity": 1.0
+  },
+  "features": {
+    "devTools": false,
+    "contextIsolation": true,
+    "nodeIntegration": false,
+    "sandbox": true,
+    "webSecurity": true,
+    "autoHideMenuBar": false,
+    "enableRemoteModule": false
+  },
+  "menu": {
+    "enabled": true,
+    "template": "default"
+  },
+  "navigation": {
+    "allowedDomains": [],
+    "openExternalLinksInBrowser": true,
+    "internalUrlPatterns": []
+  },
+  "downloads": {
+    "enabled": true,
+    "openFolderOnComplete": false,
+    "defaultPath": null
+  },
+  "session": {
+    "persistent": true,
+    "partition": "persist:main",
+    "clearOnExit": false
+  },
+  "updates": {
+    "enabled": false,
+    "autoDownload": false,
+    "autoInstall": false,
+    "checkOnStart": false
+  },
+  "logging": {
+    "level": "info",
+    "file": true,
+    "console": true
+  }
+}

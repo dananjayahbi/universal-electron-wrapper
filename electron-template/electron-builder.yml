@@ -1,0 +1,80 @@
+appId: com.electronwrapper.app
+productName: Electron Wrapper App
+copyright: Copyright © 2025
+
+directories:
+  buildResources: build
+  output: dist
+
+files:
+  - src/**/*
+  - config/**/*
+  - node_modules/**/*
+  - package.json
+
+asar: true
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: build/icon.ico
+  artifactName: ${productName}-Setup-${version}.${ext}
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  allowElevation: true
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  installerHeaderIcon: build/icon.ico
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: ${productName}
+
+mac:
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+  icon: build/icon.icns
+  category: public.app-category.productivity
+  hardenedRuntime: true
+  gatekeeperAssess: false
+
+dmg:
+  contents:
+    - x: 410
+      y: 150
+      type: link
+      path: /Applications
+    - x: 130
+      y: 150
+      type: file
+  window:
+    width: 540
+    height: 380
+
+linux:
+  target:
+    - AppImage
+    - deb
+  icon: build/icon.png
+  category: Utility
+  synopsis: Custom Electron wrapper application
+  description: A desktop application wrapper for web applications
+  maintainer: Universal Electron Wrapper
+
+appImage:
+  license: MIT
+
+deb:
+  depends:
+    - gconf2
+    - gconf-service
+    - libnotify4
+    - libappindicator1
+    - libxtst6
+    - libnss3

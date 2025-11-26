@@ -1,0 +1,72 @@
+appId: com.universal.electron-wrapper-creator
+productName: Universal Electron Wrapper Creator
+copyright: Copyright © 2025
+
+directories:
+  buildResources: build
+  output: dist
+
+files:
+  - src/**/*
+  - templates/**/*
+  - node_modules/**/*
+  - package.json
+
+asar: true
+asarUnpack:
+  - "**/node_modules/sharp/**/*"
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: build/icon.ico
+  artifactName: ${productName}-Setup-${version}.${ext}
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  allowElevation: true
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: ${productName}
+
+mac:
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+  icon: build/icon.icns
+  category: public.app-category.developer-tools
+  hardenedRuntime: true
+  gatekeeperAssess: false
+
+dmg:
+  contents:
+    - x: 410
+      y: 150
+      type: link
+      path: /Applications
+    - x: 130
+      y: 150
+      type: file
+
+linux:
+  target:
+    - AppImage
+    - deb
+  icon: build/icon.png
+  category: Development
+  synopsis: Create Electron desktop wrappers for web apps
+  description: A tool for creating custom Electron desktop applications that wrap web applications
+  maintainer: Universal Electron Wrapper
+
+extraResources:
+  - from: templates/
+    to: templates/
+    filter:
+      - "**/*"
