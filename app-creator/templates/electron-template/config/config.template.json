@@ -1,0 +1,77 @@
+{
+  "app": {
+    "name": "{{APP_NAME}}",
+    "version": "1.0.0",
+    "description": "{{APP_DESCRIPTION}}",
+    "author": "{{APP_AUTHOR}}",
+    "homepage": "{{TARGET_URL}}"
+  },
+  "target": {
+    "url": "{{TARGET_URL}}",
+    "userAgent": null
+  },
+  "window": {
+    "width": {{WINDOW_WIDTH}},
+    "height": {{WINDOW_HEIGHT}},
+    "minWidth": {{WINDOW_MIN_WIDTH}},
+    "minHeight": {{WINDOW_MIN_HEIGHT}},
+    "maxWidth": null,
+    "maxHeight": null,
+    "resizable": {{WINDOW_RESIZABLE}},
+    "movable": true,
+    "minimizable": true,
+    "maximizable": true,
+    "closable": true,
+    "focusable": true,
+    "alwaysOnTop": {{WINDOW_ALWAYS_ON_TOP}},
+    "fullscreen": false,
+    "kiosk": false,
+    "frame": {{WINDOW_FRAME}},
+    "show": true,
+    "center": true,
+    "title": "{{APP_NAME}}",
+    "backgroundColor": "#ffffff",
+    "transparent": false,
+    "hasShadow": true,
+    "opacity": 1.0
+  },
+  "features": {
+    "devTools": {{FEATURES_DEV_TOOLS}},
+    "contextIsolation": true,
+    "nodeIntegration": false,
+    "sandbox": true,
+    "webSecurity": true,
+    "autoHideMenuBar": false,
+    "enableRemoteModule": false
+  },
+  "menu": {
+    "enabled": true,
+    "template": "default"
+  },
+  "navigation": {
+    "allowedDomains": [],
+    "openExternalLinksInBrowser": true,
+    "internalUrlPatterns": []
+  },
+  "downloads": {
+    "enabled": true,
+    "openFolderOnComplete": false,
+    "defaultPath": null
+  },
+  "session": {
+    "persistent": true,
+    "partition": "persist:main",
+    "clearOnExit": false
+  },
+  "updates": {
+    "enabled": {{FEATURES_AUTO_UPDATE}},
+    "autoDownload": false,
+    "autoInstall": false,
+    "checkOnStart": false
+  },
+  "logging": {
+    "level": "info",
+    "file": true,
+    "console": true
+  }
+}
