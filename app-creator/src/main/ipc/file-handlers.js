@@ -25,7 +25,11 @@ function setupFileHandlers(ipcMain, dialog, shell) {
     const result = await dialog.showOpenDialog({
       title: 'Select Application Icon',
       filters: [
-        { name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'ico'] }
+        { name: 'All Images', extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'ico', 'bmp', 'tiff', 'svg', 'avif'] },
+        { name: 'PNG Images', extensions: ['png'] },
+        { name: 'JPEG Images', extensions: ['jpg', 'jpeg'] },
+        { name: 'ICO Files', extensions: ['ico'] },
+        { name: 'All Files', extensions: ['*'] }
       ],
       properties: ['openFile']
     });
@@ -37,7 +41,7 @@ function setupFileHandlers(ipcMain, dialog, shell) {
     const iconPath = result.filePaths[0];
     logger.info('Icon selected', { path: iconPath });
 
-    // Validate and process icon
+    // Validate icon (now accepts any image)
     try {
       const validation = await iconProcessor.validate(iconPath);
       if (!validation.valid) {

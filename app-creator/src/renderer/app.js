@@ -444,6 +444,12 @@ function handleBuildProgress(data) {
 function handleBuildLog(message) {
   const entry = document.createElement('div');
   entry.className = 'log-entry';
+  // Add color coding for errors and warnings
+  if (message.toLowerCase().includes('error')) {
+    entry.classList.add('log-error');
+  } else if (message.toLowerCase().includes('warn')) {
+    entry.classList.add('log-warning');
+  }
   entry.textContent = message;
   elements.consoleContent.appendChild(entry);
   elements.consoleContent.scrollTop = elements.consoleContent.scrollHeight;
@@ -459,9 +465,44 @@ function handleBuildComplete(result) {
   elements.resultIcon.className = 'result-icon success';
   elements.resultIcon.textContent = '✓';
   elements.resultTitle.textContent = 'Build Complete!';
-  elements.resultMessage.textContent = 'Your application has been created successfully.';
-  elements.outputPath.textContent = result.outputPath || '-';
+  
+  // Show installer files list
+  const installers = result.installerFiles || [];
+  if (installers.length > 0) {
+    const installerList = installers.map(f => {
+      const sizeStr = formatFileSize(f.size);
+      return `<div class="installer-file">
+        <span class="file-icon">📦</span>
+        <span class="file-name">${f.name}</span>
+        <span class="file-size">${sizeStr}</span>
+        <button class="btn btn-small btn-primary" onclick="openFile('${f.path.replace(/\\/g, '\\\\')}')">Open</button>
+      </div>`;
+    }).join('');
+    
+    elements.resultMessage.innerHTML = `
+      <p>Your installer(s) have been saved to your <strong>Downloads</strong> folder:</p>
+      <div class="installer-list">${installerList}</div>
+    `;
+  } else {
+    elements.resultMessage.textContent = 'Your application has been created successfully.';
+  }
+  
+  elements.outputPath.textContent = result.outputPath || 'Downloads folder';
   elements.buildTime.textContent = formatDuration(result.duration);
+}
+
+// Helper to format file size
+function formatFileSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+// Helper to open a file
+function openFile(filePath) {
+  if (window.electronAPI) {
+    window.electronAPI.openFile(filePath);
+  }
 }
 
 function handleBuildError(error) {
@@ -473,7 +514,19 @@ function handleBuildError(error) {
   elements.resultIcon.className = 'result-icon error';
   elements.resultIcon.textContent = '✕';
   elements.resultTitle.textContent = 'Build Failed';
-  elements.resultMessage.textContent = error.error || 'An error occurred during the build process.';
+  
+  // Show detailed error message
+  const errorMsg = error.error || 'An error occurred during the build process.';
+  elements.resultMessage.innerHTML = `
+    <div class="error-details">
+      <p>${errorMsg.split('\n')[0]}</p>
+      <details>
+        <summary>Show Full Error Log</summary>
+        <pre class="error-log">${errorMsg}</pre>
+      </details>
+      <p class="error-hint">Check the console output above for more details. A build.log file has been saved in the output folder.</p>
+    </div>
+  `;
   elements.outputPath.textContent = '-';
   elements.buildTime.textContent = '-';
   

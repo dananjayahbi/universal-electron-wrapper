@@ -95,14 +95,16 @@ class BuildOrchestrator extends EventEmitter {
 
       // Step 7: Complete
       await this.executeStep('complete', async () => {
-        // Move output to final location
+        // Copy installers to Downloads folder
         await this.finalizeOutput();
       });
 
       const duration = Date.now() - this.startTime;
+      const downloadsPath = app.getPath('downloads');
       const result = {
         success: true,
-        outputPath: this.getOutputPath(),
+        outputPath: downloadsPath,  // Point to Downloads folder, not temp
+        installerFiles: this.getInstallerFiles(),  // List of installer files
         duration,
         config: this.config
       };
@@ -112,6 +114,16 @@ class BuildOrchestrator extends EventEmitter {
       
       // Save to history
       await this.saveToHistory(result);
+
+      // Clean up temp workspace after a delay (keep it for debugging)
+      setTimeout(async () => {
+        try {
+          await fs.remove(this.workspacePath);
+          logger.info('Cleaned up temporary workspace');
+        } catch (err) {
+          logger.warn('Could not clean up workspace', { error: err.message });
+        }
+      }, 60000); // Clean up after 1 minute
 
       logger.info('Build completed successfully', { duration });
       return result;
@@ -163,14 +175,18 @@ class BuildOrchestrator extends EventEmitter {
   }
 
   /**
-   * Prepare workspace directory
+   * Prepare workspace directory - uses temp folder for builds
    * @returns {Promise<string>} Workspace path
    */
   async prepareWorkspace() {
-    const outputBase = this.config.outputPath || path.join(app.getPath('documents'), 'ElectronApps');
+    // Use temp folder for building (not Documents)
+    const tempBase = app.getPath('temp');
     const safeName = this.config.safeName || this.templateManager.generateSafeName(this.config.appName);
-    const workspacePath = path.join(outputBase, safeName);
+    const timestamp = Date.now();
+    const workspacePath = path.join(tempBase, 'ElectronAppBuilder', `${safeName}-${timestamp}`);
 
+    // Clean up any existing workspace
+    await fs.remove(workspacePath);
     await fs.ensureDir(workspacePath);
     this.log(`Workspace prepared: ${workspacePath}`);
     
@@ -181,20 +197,44 @@ class BuildOrchestrator extends EventEmitter {
    * Process application icons
    */
   async processIcons() {
+    const buildDir = path.join(this.workspacePath, 'build');
+    await fs.ensureDir(buildDir);
+    
     if (this.config.iconPath) {
-      // Process user-provided icon
-      const result = await this.iconProcessor.process(
-        this.config.iconPath,
-        this.workspacePath
-      );
-      this.log(`Icons processed: ${result.iconSet?.length || 0} sizes generated`);
+      try {
+        // Process user-provided icon
+        const result = await this.iconProcessor.process(
+          this.config.iconPath,
+          this.workspacePath
+        );
+        this.log(`Icons processed: ${result.iconSet?.length || 0} sizes generated`);
+      } catch (error) {
+        // Icon processing failed, but don't fail the entire build
+        // Generate a default icon instead
+        this.log(`Warning: Icon processing failed (${error.message}), using default icon`);
+        logger.warn('Icon processing failed, generating default icon', { error: error.message });
+        
+        try {
+          const defaultIconPath = path.join(buildDir, 'icon.png');
+          await this.iconProcessor.generateDefaultIcon(defaultIconPath, this.config.appName);
+          this.log('Default icon generated as fallback');
+        } catch (defaultError) {
+          // Even default icon failed, continue without icon
+          this.log('Warning: Could not generate default icon, build will continue without custom icon');
+          logger.warn('Default icon generation failed', { error: defaultError.message });
+        }
+      }
     } else {
       // Generate default icon
-      const buildDir = path.join(this.workspacePath, 'build');
-      await fs.ensureDir(buildDir);
-      const defaultIconPath = path.join(buildDir, 'icon.png');
-      await this.iconProcessor.generateDefaultIcon(defaultIconPath, this.config.appName);
-      this.log('Default icon generated');
+      try {
+        const defaultIconPath = path.join(buildDir, 'icon.png');
+        await this.iconProcessor.generateDefaultIcon(defaultIconPath, this.config.appName);
+        this.log('Default icon generated');
+      } catch (error) {
+        // Default icon failed, continue without
+        this.log('Warning: Could not generate default icon, build will continue');
+        logger.warn('Default icon generation failed', { error: error.message });
+      }
     }
   }
 
@@ -250,63 +290,135 @@ class BuildOrchestrator extends EventEmitter {
   async runElectronBuilder() {
     this.log('Building application...');
     
+    // Store logs for debugging
+    this.buildLogs = [];
+    
     return new Promise((resolve, reject) => {
-      const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-      const args = ['run', 'build'];
+      // Use npx to run electron-builder directly from node_modules
+      const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+      const args = ['electron-builder', '--win'];  // Explicit Windows build
 
-      // Add platform-specific flags based on config
-      // For now, build for current platform
+      this.log(`Running: ${npx} ${args.join(' ')}`);
       
-      this.childProcess = spawn(npm, args, {
+      this.childProcess = spawn(npx, args, {
         cwd: this.workspacePath,
         shell: true,
-        env: { ...process.env }
+        env: { 
+          ...process.env,
+          // Ensure node_modules/.bin is in PATH
+          PATH: `${path.join(this.workspacePath, 'node_modules', '.bin')}${path.delimiter}${process.env.PATH}`
+        }
       });
 
       let stdout = '';
       let stderr = '';
 
       this.childProcess.stdout.on('data', (data) => {
-        stdout += data.toString();
-        const line = data.toString().trim();
-        if (line) this.log(line);
+        const text = data.toString();
+        stdout += text;
+        const lines = text.split('\n').filter(l => l.trim());
+        lines.forEach(line => {
+          this.log(line);
+          this.buildLogs.push({ type: 'stdout', text: line, time: new Date().toISOString() });
+        });
       });
 
       this.childProcess.stderr.on('data', (data) => {
-        stderr += data.toString();
-        const line = data.toString().trim();
-        if (line) this.log(line);
+        const text = data.toString();
+        stderr += text;
+        const lines = text.split('\n').filter(l => l.trim());
+        lines.forEach(line => {
+          this.log(line);
+          this.buildLogs.push({ type: 'stderr', text: line, time: new Date().toISOString() });
+        });
       });
 
-      this.childProcess.on('close', (code) => {
+      this.childProcess.on('close', async (code) => {
         this.childProcess = null;
+        
+        // Save build log to file
+        try {
+          const logPath = path.join(this.workspacePath, 'build.log');
+          const logContent = this.buildLogs.map(l => `[${l.time}] [${l.type.toUpperCase()}] ${l.text}`).join('\n');
+          await fs.writeFile(logPath, logContent);
+          this.log(`Build log saved to: ${logPath}`);
+        } catch (err) {
+          logger.warn('Could not save build log', { error: err.message });
+        }
+        
         if (code === 0) {
           this.log('Application built successfully');
           resolve();
         } else {
-          reject(new Error(`Build failed with code ${code}\n${stderr}`));
+          const errorMsg = `Build failed with code ${code}`;
+          this.log(`ERROR: ${errorMsg}`);
+          this.log(`STDERR: ${stderr}`);
+          this.log(`STDOUT: ${stdout}`);
+          reject(new Error(`${errorMsg}\n\nOutput:\n${stdout}\n\nErrors:\n${stderr}`));
         }
       });
 
       this.childProcess.on('error', (error) => {
         this.childProcess = null;
+        this.log(`Process error: ${error.message}`);
         reject(error);
       });
     });
   }
 
   /**
-   * Finalize build output
+   * Finalize build output - copy installer to Downloads folder
    */
   async finalizeOutput() {
-    // The output is already in workspace/dist
-    // Could move to a different location if needed
     const distPath = path.join(this.workspacePath, 'dist');
+    const downloadsPath = app.getPath('downloads');
+    
+    this.installerFiles = [];
     
     if (await fs.pathExists(distPath)) {
       const files = await fs.readdir(distPath);
-      this.log(`Build output: ${files.length} files in ${distPath}`);
+      this.log(`Build output: ${files.length} files in dist folder`);
+      
+      // Find installer files (.exe, .dmg, .AppImage, .deb)
+      const installerExtensions = ['.exe', '.dmg', '.AppImage', '.deb', '.rpm'];
+      
+      for (const file of files) {
+        const ext = path.extname(file).toLowerCase();
+        if (installerExtensions.includes(ext)) {
+          const sourcePath = path.join(distPath, file);
+          const destPath = path.join(downloadsPath, file);
+          
+          try {
+            // Copy to Downloads folder
+            await fs.copy(sourcePath, destPath, { overwrite: true });
+            this.installerFiles.push({
+              name: file,
+              path: destPath,
+              size: (await fs.stat(destPath)).size
+            });
+            this.log(`✓ Copied to Downloads: ${file}`);
+          } catch (error) {
+            this.log(`Warning: Could not copy ${file} to Downloads: ${error.message}`);
+          }
+        }
+      }
+      
+      if (this.installerFiles.length === 0) {
+        this.log('Warning: No installer files found in build output');
+      } else {
+        this.log(`${this.installerFiles.length} installer(s) copied to Downloads folder`);
+      }
+    } else {
+      this.log('Warning: dist folder not found');
     }
+  }
+
+  /**
+   * Get installer files that were created
+   * @returns {Array} Array of installer file info
+   */
+  getInstallerFiles() {
+    return this.installerFiles || [];
   }
 
   /**

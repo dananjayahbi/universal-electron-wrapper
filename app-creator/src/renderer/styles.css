@@ -524,6 +524,95 @@ input.invalid {
   margin-bottom: 4px;
 }
 
+.console-content .log-entry.log-error {
+  color: #f56565;
+  background: rgba(245, 101, 101, 0.1);
+  padding: 2px 4px;
+  border-radius: 2px;
+}
+
+.console-content .log-entry.log-warning {
+  color: #ed8936;
+}
+
+/* Error Details */
+.error-details {
+  text-align: left;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.error-details p {
+  margin: 8px 0;
+}
+
+.error-details details {
+  margin: 16px 0;
+  background: #0d1117;
+  border-radius: var(--border-radius);
+  padding: 8px;
+}
+
+.error-details summary {
+  cursor: pointer;
+  padding: 8px;
+  color: var(--primary-color);
+}
+
+.error-details .error-log {
+  max-height: 300px;
+  overflow: auto;
+  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+  font-size: 11px;
+  padding: 12px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: #c9d1d9;
+  background: #0d1117;
+}
+
+.error-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Installer Files List */
+.installer-list {
+  margin: 16px 0;
+  text-align: left;
+}
+
+.installer-file {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius);
+  margin-bottom: 8px;
+}
+
+.installer-file .file-icon {
+  font-size: 24px;
+}
+
+.installer-file .file-name {
+  flex: 1;
+  font-weight: 500;
+  word-break: break-all;
+}
+
+.installer-file .file-size {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.btn-small {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
 /* Build Result */
 .build-result {
   text-align: center;
